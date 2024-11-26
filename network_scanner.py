@@ -1,17 +1,33 @@
 import socket
 import ipaddress
 import psutil
-from scapy.all import ARP, Ether, send, srp
+from scapy.all import ARP, Ether, srp
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tabulate import tabulate
+from mac_vendor_lookup import MacLookup
 
 def get_device_name(ip):
+    """
+    Attempt to resolve the hostname for the given IP.
+    """
     try:
         return socket.gethostbyaddr(ip)[0]
     except socket.herror:
         return "Unknown"
 
+def get_mac_vendor(mac):
+    """
+    Lookup manufacturer/vendor for a given MAC address.
+    """
+    try:
+        return MacLookup().lookup(mac)
+    except Exception:
+        return "Unknown"
+
 def list_network_adapters():
+    """
+    List available network adapters and their IP addresses.
+    """
     adapters = []
     interfaces = psutil.net_if_addrs()
     for adapter_name, addresses in interfaces.items():
@@ -21,6 +37,9 @@ def list_network_adapters():
     return adapters
 
 def choose_network_adapter(adapters):
+    """
+    Allow the user to select a network adapter from the list.
+    """
     print("\nAvailable Network Adapters:")
     for i, adapter in enumerate(adapters):
         print(f"[{i}] {adapter['name']} ({adapter['ip']})")
@@ -35,6 +54,9 @@ def choose_network_adapter(adapters):
             print("Invalid input. Please enter a number.")
 
 def get_network_from_adapter(adapter):
+    """
+    Derive the network range from the selected adapter's IP address.
+    """
     ip = adapter["ip"]
     subnet = "255.255.255.0"  # Assuming /24 subnet mask
     network = ipaddress.IPv4Network(f"{ip}/{subnet}", strict=False)
@@ -52,8 +74,14 @@ def scan_ip(ip):
 
         if answered:
             for _, received in answered:
-                return {"IP Address": received.psrc, "Device Name": get_device_name(received.psrc)}
-    except Exception as e:
+                device = {
+                    "IP Address": received.psrc,
+                    "MAC Address": received.hwsrc,
+                    "Device Name": get_device_name(received.psrc),
+                    "Manufacturer": get_mac_vendor(received.hwsrc),
+                }
+                return device
+    except Exception:
         pass
     return None
 
@@ -74,6 +102,9 @@ def discover_devices_concurrent(network):
     return devices
 
 def main():
+    """
+    Main function to run the network scanner.
+    """
     # List network adapters and choose one
     adapters = list_network_adapters()
     if not adapters:
