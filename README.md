@@ -1,6 +1,6 @@
 # Network Device Scanner
 
-A Python-based tool to scan and discover network devices on your local network. The script dynamically detects available network adapters, allows you to choose the correct one, and performs a fast ARP-based scan to find active devices and their hostnames.
+A Python-based tool to scan and discover network devices on your local network. The script dynamically detects available network adapters, allows you to choose the correct one, and performs a fast ARP-based scan to find active devices, their hostnames, MAC addresses, and manufacturers.
 
 ## Features
 
@@ -8,6 +8,7 @@ A Python-based tool to scan and discover network devices on your local network. 
 - **Concurrent Scanning**: Uses multithreading for fast network scanning.
 - **Tabular Output**: Displays discovered devices in a clean table format.
 - **Hostname Resolution**: Attempts to resolve the hostname of discovered devices.
+- **MAC Address and Manufacturer Lookup**: Retrieves the MAC address and vendor/manufacturer details of each device.
 
 ## Requirements
 
@@ -17,6 +18,7 @@ A Python-based tool to scan and discover network devices on your local network. 
   - `scapy`
   - `tabulate`
   - `psutil`
+  - `mac-vendor-lookup`
 
 ## Installation
 
@@ -52,13 +54,13 @@ A Python-based tool to scan and discover network devices on your local network. 
 
 3. Wait for the scan to complete. The results will be displayed in a table format:
    ```
-   +----------------+------------------------+
-   | IP Address     | Device Name            |
-   +================+========================+
-   | 192.168.0.1    | router.home            |
-   | 192.168.0.102  | laptop.local           |
-   | 192.168.0.103  | phone.local            |
-   +----------------+------------------------+
+   +----------------+-------------------+-----------------+------------------------+
+   | IP Address     | MAC Address       | Device Name     | Manufacturer           |
+   +================+===================+=================+========================+
+   | 192.168.0.1    | 00:11:22:33:44:55 | router.home     | Cisco Systems          |
+   | 192.168.0.102  | 66:77:88:99:AA:BB | laptop.local    | Dell Inc.              |
+   | 192.168.0.103  | CC:DD:EE:FF:00:11 | phone.local     | Samsung Electronics    |
+   +----------------+-------------------+-----------------+------------------------+
    ```
 
 ## Example Output
@@ -71,18 +73,22 @@ Available Network Adapters:
 Select the network adapter to use (number): 1
 
 Scanning network: 192.168.0.0/24
-+----------------+------------------------+
-| IP Address     | Device Name            |
-+================+========================+
-| 192.168.0.1    | router.home            |
-| 192.168.0.102  | laptop.local           |
-| 192.168.0.103  | phone.local            |
-+----------------+------------------------+
++----------------+-------------------+-----------------+------------------------+
+| IP Address     | MAC Address       | Device Name     | Manufacturer           |
++================+===================+=================+========================+
+| 192.168.0.1    | 00:11:22:33:44:55 | router.home     | Cisco Systems          |
+| 192.168.0.102  | 66:77:88:99:AA:BB | laptop.local    | Dell Inc.              |
+| 192.168.0.103  | CC:DD:EE:FF:00:11 | phone.local     | Samsung Electronics    |
++----------------+-------------------+-----------------+------------------------+
 ```
 
 ## Contributing
 
 Contributions are welcome! Feel free to open issues or submit pull requests for enhancements or bug fixes.
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 ## Disclaimer
 
