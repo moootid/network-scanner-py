@@ -62,15 +62,15 @@ def get_network_from_adapter(adapter):
     network = ipaddress.IPv4Network(f"{ip}/{subnet}", strict=False)
     return str(network)
 
-def scan_ip(ip):
+def scan_ip(ip, iface):
     """
-    Send ARP request to a single IP and return the result if the host is reachable.
+    Send an ARP request to a single IP and return the result if the host is reachable.
     """
     try:
         arp_request = ARP(pdst=ip)
         broadcast = Ether(dst="ff:ff:ff:ff:ff:ff")
         packet = broadcast / arp_request
-        answered = srp(packet, timeout=1, verbose=False)[0]
+        answered = srp(packet, iface=iface, timeout=1, verbose=False)[0]
 
         if answered:
             for _, received in answered:
@@ -81,11 +81,13 @@ def scan_ip(ip):
                     "Manufacturer": get_mac_vendor(received.hwsrc),
                 }
                 return device
-    except Exception:
+    except Exception as e:
+        # You might want to log the exception e for debugging
         pass
     return None
 
-def discover_devices_concurrent(network):
+
+def discover_devices_concurrent(network, iface):
     """
     Perform a concurrent ARP scan across the network.
     """
@@ -93,13 +95,14 @@ def discover_devices_concurrent(network):
     devices = []
 
     with ThreadPoolExecutor(max_workers=50) as executor:
-        future_to_ip = {executor.submit(scan_ip, ip): ip for ip in ip_list}
+        future_to_ip = {executor.submit(scan_ip, ip, iface): ip for ip in ip_list}
         for future in as_completed(future_to_ip):
             result = future.result()
             if result:
                 devices.append(result)
 
     return devices
+
 
 def main():
     """
@@ -115,12 +118,13 @@ def main():
     network = get_network_from_adapter(selected_adapter)
 
     print(f"\nScanning network: {network}")
-    devices = discover_devices_concurrent(network)
+    devices = discover_devices_concurrent(network, selected_adapter['name'])
 
     if devices:
         print(tabulate(devices, headers="keys", tablefmt="grid"))
     else:
         print("No devices found on the network.")
+
 
 if __name__ == "__main__":
     main()
